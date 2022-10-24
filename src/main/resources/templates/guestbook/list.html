@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<th:block th:replace="~{/layout/basic:: setContent(~{this::content} )}">
+  <th:block th:fragment="content">
+    <h1>방명록</h1>
+    <span>
+      <a th:href="@{/guestbook/register}">
+      <button type="button" class="btn btn-outline-primary">방명록 작성</button>
+      </a>
+    </span>
+    <div th:if = "${msg != null}" th:text="${msg}"> </div>
+
+    <form action="/guestbook/list" method="get" id="searchForm">
+      <div class="input-group">
+        <input type="hidden" name="page" value = "1"><!-- 기본으로 검색 시 1페이지로 보여지기 때문에.. -->
+        <div class="input-group-prepend">
+          <select class="custom-select" name="type"><!-- PageRequestDTO에서 검색 타입을 type으로 지정했기 때문에..-->
+            <option th:selected="${pageRequestDTO.type == null}">-------</option>
+            <option value="t" th:selected="${pageRequestDTO.type =='t'}" >제목</option><!--ServiceImpl에서 지정한 값 t(t가 들어가면 제목..), th:selected -제목으로 검색했을 때 제목 선택되어 나옴-->
+            <option value="c" th:selected="${pageRequestDTO.type =='c'}" >내용</option>
+            <option value="w" th:selected="${pageRequestDTO.type =='w'}" >작성자</option>
+            <option value="tc" th:selected="${pageRequestDTO.type =='tc'}" >제목 + 내용</option>
+            <option value="tcw" th:selected="${pageRequestDTO.type =='tcw'}" >제목 + 내용 + 작성자</option>
+          </select>
+        </div>
+        <input class="form-control" name="keyword"
+               th:value="${pageRequestDTO.keyword}">
+        <div class="input-group-append" id="button-addon4">
+          <button class="btn btn-outline-secondary btn-search" id="btn-search"
+                  type="button">검색</button>
+          <button class="btn btn-outline-secondary btn-clear" id="btn-clear"
+                  type="button">초기화</button>
+        </div>
+      </div>
+    </form>
+
+    <script>
+      var searchForm = document.getElementById("searchForm");
+      document.getElementById("btn-search").addEventListener("click", (e) => {
+        searchForm.submit();
+      });
+      document.getElementById("btn-clear").addEventListener("click", (e) => {
+        searchForm.reset();
+      });
+    </script>
+
+    <table class="table table-striped">
+      <thead>
+      <tr>
+        <th scope="col">글번호</th>
+        <th scope="col">제목</th>
+        <th scope="col">작성자</th>
+        <th scope="col">작성일</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="dto : ${result.dtoList}" >
+        <th scope="row">[[${dto.gno}]]</th>
+        <td>
+          <a th:href="@{/guestbook/read(gno = ${dto.gno},page=${result.page}, type=${pageRequestDTO.type}, keyword=${pageRequestDTO.keyword})}">[[${dto.title}]] </a>
+        </td>
+        <td>[[${dto.writer}]]</td>
+        <td>[[${#temporals.format(dto.regDate, 'yyyy/MM/dd')}]]</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <ul class="pagination h-100 justify-content-center align-items-center">
+      <li class="page-item " th:if="${result.prev}">
+        <a class="page-link" th:href="@{/guestbook/list(page= ${result.start -1}, type=${pageRequestDTO.type}, keyword=${pageRequestDTO.keyword})}"
+           tabindex="-1">이전</a>
+      </li>
+      <!--현제 페이지 번호와 출력하는 페이지 번호가 같으면 active-->
+      <li th:class=" 'page-item ' + ${result.page == page?'active':''} " th:each="page:${result.pageList}">
+        <a class="page-link" th:href="@{/guestbook/list(page = ${page}, type=${pageRequestDTO.type}, keyword=${pageRequestDTO.keyword})}">
+          [[${page}]]
+        </a>
+      </li>
+      <li class="page-item" th:if="${result.next}">
+        <a class="page-link" th:href="@{/guestbook/list(page= ${result.end +1}, type=${pageRequestDTO.type}, keyword=${pageRequestDTO.keyword})}">다음</a>
+      </li>
+    </ul>
+
+
+
+  </th:block>
+</th:block>
